@@ -280,8 +280,8 @@ function buildControlPanel(role) {
     });
   }
 
-  // ── Shared Pen Toggle (shown to ALL 4 players below their main control) ──
-  addSharedPenButton(panel);
+  // ── Pen Toggle: Color player only ──
+  if (role === 'color') addSharedPenButton(panel);
 }
 
 /** Appends the shared pen-down / pen-lift button to any player's control panel. */

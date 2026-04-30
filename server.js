@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const ROLES = {
   x:     { id: 'x',     label: 'X-Axis',    emoji: '↔️', color: '#FF6B6B', description: 'You control LEFT & RIGHT' },
   y:     { id: 'y',     label: 'Y-Axis',     emoji: '↕️', color: '#4ECDC4', description: 'You control UP & DOWN' },
-  color: { id: 'color', label: 'Color',      emoji: '🎨', color: '#FFE66D', description: 'You control the COLOR' },
+  color: { id: 'color', label: 'Color',      emoji: '🎨', color: '#FFE66D', description: 'You control COLOR + PEN' },
   size:  { id: 'size',  label: 'Brush Size', emoji: '⭕', color: '#A8E6CF', description: 'You control BRUSH SIZE' },
 };
 
@@ -165,8 +165,8 @@ io.on('connection', (socket) => {
     const roomId = socket.roomId;
     if (!roomId || !rooms[roomId]) return;
     const room = rooms[roomId];
-    const player = room.players[socket.id];
-    if (!player) return; // spectators cannot toggle pen
+    const player = rooms[roomId].players[socket.id];
+    if (!player || player.role !== 'color') return; // only the Color player controls the pen
 
     const prevX = room.brushState.x;
     const prevY = room.brushState.y;
