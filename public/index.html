@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chaos Canvas — Collaborative Latency Drawing</title>
+  <meta name="description" content="A chaotic multiplayer drawing game where each player controls only one property of the brush. Communication is key!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ LOBBY SCREEN -->
+<div id="lobby-screen" class="screen active">
+  <div class="lobby-bg">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+  <div class="lobby-content">
+    <div class="logo-area">
+      <div class="logo-icon">🎨</div>
+      <h1 class="logo-title">Chaos Canvas</h1>
+      <p class="logo-sub">Where <span class="highlight">collaboration</span> meets <span class="highlight-red">beautiful chaos</span></p>
+    </div>
+
+    <div class="roles-preview">
+      <div class="role-chip" style="--c:#FF6B6B">↔️ <strong>X-Axis</strong></div>
+      <div class="role-chip" style="--c:#4ECDC4">↕️ <strong>Y-Axis</strong></div>
+      <div class="role-chip" style="--c:#FFE66D">🎨 <strong>Color</strong></div>
+      <div class="role-chip" style="--c:#A8E6CF">⭕ <strong>Brush Size</strong></div>
+    </div>
+
+    <div class="join-card">
+      <div class="form-group">
+        <label for="input-name">Your Name</label>
+        <input id="input-name" type="text" placeholder="e.g. Pedro 🔥" maxlength="20" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="input-room">Room Code</label>
+        <div class="room-row">
+          <input id="input-room" type="text" placeholder="e.g. CHAOS42" maxlength="10" autocomplete="off" style="text-transform:uppercase" />
+          <button id="btn-random-room" class="btn-ghost" title="Random room">🎲</button>
+        </div>
+      </div>
+      <button id="btn-join" class="btn-primary">Join the Chaos →</button>
+    </div>
+
+    <p class="lobby-tip">💡 Share the same room code with your team to draw together</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ GAME SCREEN -->
+<div id="game-screen" class="screen">
+
+  <!-- Top HUD -->
+  <header class="hud">
+    <div class="hud-left">
+      <span class="hud-logo">🎨 Chaos</span>
+      <span class="hud-room" id="hud-room">Room: —</span>
+    </div>
+    <div class="hud-center">
+      <div class="challenge-banner">
+        <span class="challenge-label">DRAW:</span>
+        <span id="challenge-name" class="challenge-name">—</span>
+        <span id="challenge-hint" class="challenge-hint">—</span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button id="btn-new-challenge" class="btn-hud" title="New challenge">🎲 New</button>
+      <button id="btn-clear" class="btn-hud btn-danger" title="Clear canvas">🗑️ Clear</button>
+    </div>
+  </header>
+
+  <div class="game-body">
+
+    <!-- Left: Players sidebar -->
+    <aside class="sidebar-left">
+      <h3 class="sidebar-title">Team</h3>
+      <div id="player-list" class="player-list"></div>
+      
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">Brush State</h3>
+        <div class="brush-stats">
+          <div class="stat-row">
+            <span>X</span>
+            <div class="stat-bar-wrap"><div id="stat-x" class="stat-bar" style="--w:50%;--c:#FF6B6B"></div></div>
+            <span id="stat-x-val" class="stat-val">400</span>
+          </div>
+          <div class="stat-row">
+            <span>Y</span>
+            <div class="stat-bar-wrap"><div id="stat-y" class="stat-bar" style="--w:50%;--c:#4ECDC4"></div></div>
+            <span id="stat-y-val" class="stat-val">300</span>
+          </div>
+          <div class="stat-row">
+            <span>Color</span>
+            <div id="stat-color-preview" class="color-preview"></div>
+            <span id="stat-color-val" class="stat-val">0°</span>
+          </div>
+          <div class="stat-row">
+            <span>Size</span>
+            <div class="stat-bar-wrap"><div id="stat-size" class="stat-bar" style="--w:20%;--c:#A8E6CF"></div></div>
+            <span id="stat-size-val" class="stat-val">12</span>
+          </div>
+          <div class="stat-row">
+            <span>Pen</span>
+            <div id="stat-pen" class="pen-indicator off">LIFTED</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center: Canvas -->
+    <main class="canvas-wrap">
+      <div class="canvas-container" id="canvas-container">
+        <canvas id="main-canvas" width="800" height="600"></canvas>
+        <!-- Cursor overlay -->
+        <div id="brush-cursor" class="brush-cursor"></div>
+      </div>
+    </main>
+
+    <!-- Right: Your control + Chat -->
+    <aside class="sidebar-right">
+      <!-- My Role Card -->
+      <div id="my-role-card" class="role-card">
+        <div class="role-emoji" id="my-role-emoji">🎲</div>
+        <div class="role-label" id="my-role-label">Waiting...</div>
+        <div class="role-desc" id="my-role-desc">Joining room...</div>
+      </div>
+
+      <!-- Control Panel (changes based on role) -->
+      <div class="control-panel" id="control-panel">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Shout box -->
+      <div class="shout-box">
+        <h3 class="sidebar-title">📢 Shout!</h3>
+        <div id="shout-log" class="shout-log"></div>
+        <div class="shout-input-row">
+          <input id="shout-input" type="text" placeholder="Shout at your team..." maxlength="100" autocomplete="off"/>
+          <button id="btn-shout">Send</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TOAST NOTIFICATIONS -->
+<div id="toast-container" class="toast-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
